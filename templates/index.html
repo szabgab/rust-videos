@@ -1,0 +1,30 @@
+{% include 'templates/incl/header.html' %}
+  <section class="section">
+    <div class="container">
+      <h1 class="title">{{title}}</h1>
+      <div class="content">
+           
+        {% for video in videos %}
+          <div class="box">
+            <div id="{{video.slug}}">
+              <h2><a href="{{video.youtube}}">{{video.title}} {{video.date}}</a></h2>
+              <ul>
+                  {% for speaker in video.speakers %}
+                      <li>{{speaker}}</li>
+                  {% endfor %}
+              
+              </ul>
+              <div>Language: {{video.language}}</div>
+              <div>Recording quality: {{video.recording_quality}}</div>
+              <div>{{video.body}}</div>
+
+            </div>
+          </div>
+        {% endfor %}
+
+        {{content}}
+
+      </div>
+    </div>
+  </section>
+{% include 'templates/incl/footer.html' %}

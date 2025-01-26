@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::error::Error;
+use std::path::{Path, PathBuf};
+
+pub type Partials = liquid::partials::EagerCompiler<liquid::partials::InMemorySource>;
 
 #[derive(Deserialize, Debug, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -86,8 +89,61 @@ fn markdown2html(content: &str) -> String {
     .unwrap()
 }
 
+fn generate_videos_page(videos: &HashMap<String, Video>, path: &Path) {
+    let mut videos_list = videos.values().collect::<Vec<&Video>>();
+    videos_list.sort_by_key(|video| &video.title);
+
+    let template = include_str!("../templates/index.html");
+    let globals = liquid::object!({
+        "title": "Rust Videos",
+        "videos": videos_list,
+        "content": "",
+    });
+    render_page(globals, template, path.join("index.html")).unwrap();
+}
+
+fn render_page(
+    globals: liquid::Object,
+    template: &str,
+    path: PathBuf,
+) -> Result<(), Box<dyn Error>> {
+    let partials = load_templates()?;
+
+    let template = liquid::ParserBuilder::with_stdlib()
+        .partials(partials)
+        .build()?
+        .parse(template)?;
+
+    let content = template.render(&globals)?;
+
+    std::fs::write(path, content)?;
+
+    Ok(())
+}
+
+pub fn load_templates() -> Result<Partials, Box<dyn Error>> {
+    let mut partials = Partials::empty();
+    partials.add(
+        "templates/incl/header.html",
+        include_str!("../templates/incl/header.html"),
+    );
+    partials.add(
+        "templates/incl/footer.html",
+        include_str!("../templates/incl/footer.html"),
+    );
+    partials.add(
+        "templates/incl/navigation.html",
+        include_str!("../templates/incl/navigation.html"),
+    );
+    Ok(partials)
+}
+
 fn main() {
-    println!("Hello, world!");
     let videos = load_videos();
-    println!("{:?}", videos);
+    //println!("{:?}", videos);
+
+    let path = std::path::PathBuf::from("_site");
+    std::fs::create_dir_all(&path).unwrap();
+
+    generate_videos_page(&videos, &path);
 }
