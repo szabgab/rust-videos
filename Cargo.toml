@@ -4,3 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+serde = { version = "1.0.217", features = ["derive"] }
+serde_yml = "0.0.12"
+markdown = "1.0.0-alpha.21"
+chrono = "0.4.39"
+liquid = "0.26.10"
